@@ -107,7 +107,14 @@ export default defineConfig(({ mode }) => {
           // go embed ignore files start with '_'
           chunkFileNames: "assets/chunk-[name]-[hash].js",
           entryFileNames: "assets/entry-[name]-[hash].js",
-          // Do not use manualChunks, use React.lazy() and <Suspense> instead
+          // Keep shared libraries together instead of issuing dozens of tiny
+          // icon and primitive requests on the first administration visit.
+          manualChunks(id) {
+            if (!id.includes("node_modules/")) return;
+            if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return "react-vendor";
+            if (id.includes("node_modules/@radix-ui/") || id.includes("node_modules/@floating-ui/")) return "radix-vendor";
+            if (id.includes("node_modules/lucide-react/")) return "icons";
+          },
         }
       },
     },

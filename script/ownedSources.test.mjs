@@ -12,9 +12,9 @@ for (const platform of ["linux", "windows", "macos"]) {
   test(`${platform} installs the owned, fixed release and preserves remote control`, () => {
     const command = buildAgentInstallCommand(platform, connectionArgs);
     const extension = platform === "windows" ? "ps1" : "sh";
-    assert.ok(command.includes(`https://raw.githubusercontent.com/R1ddle1337/komari-agent/refs/tags/1.5.13/install.${extension}`));
+    assert.ok(command.includes(`https://raw.githubusercontent.com/R1ddle1337/komari-agent/refs/tags/1.5.15/install.${extension}`));
     assert.ok(command.includes("--install-version"));
-    assert.ok(command.includes("1.5.13"));
+    assert.ok(command.includes("1.5.15"));
     assert.ok(command.includes("https://my-panel.example"));
     assert.ok(command.includes("my-token"));
     assert.ok(!command.includes("komari-monitor"));
@@ -29,7 +29,7 @@ test("Docker uses the owned image and removes only installer flags", () => {
     ...connectionArgs, "--install-dir", "/srv/agent", "--install-ghproxy", "https://proxy.example",
     "--install-service-name", "another-agent", "--gpu", "--include-nics", "eth0",
   ]);
-  assert.ok(command.includes("ghcr.io/r1ddle1337/komari-agent:1.5.13"));
+  assert.ok(command.includes("ghcr.io/r1ddle1337/komari-agent:1.5.15"));
   assert.ok(command.includes("--gpu --include-nics eth0"));
   assert.ok(!command.includes("--install-"));
   assert.ok(!command.includes("/srv/agent"));
@@ -70,6 +70,6 @@ test("the latest UI explicit version and snapshot options are preserved", () => 
     const command = buildAgentInstallCommand("linux", [...connectionArgs, "--install-version", version]);
     assert.ok(command.includes(`--install-version ${version}`));
     assert.equal(command.match(/--install-version/g)?.length, 1);
-    assert.ok(command.includes("/R1ddle1337/komari-agent/refs/tags/1.5.13/install.sh"));
+    assert.ok(command.includes("/R1ddle1337/komari-agent/refs/tags/1.5.15/install.sh"));
   }
 });

@@ -1,5 +1,6 @@
 import React from "react";
 import { toast } from "sonner";
+import { fetchJSON } from "./fetchJSON";
 
 /**
  * API utility functions for settings management
@@ -78,13 +79,7 @@ function waitForMigrationGuide(guidePath: string) {
  */
 export async function getSettings(): Promise<SettingsResponse> {
   try {
-    const response = await fetch("/api/admin/settings");
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await fetchJSON<{data: unknown}>("/api/admin/settings/");
     const settingsPayload = data["data"];
 
     if (

@@ -10,6 +10,7 @@ import type {
 } from "../types/rpc2";
 import { RPC2ConnectionState } from "../types/rpc2";
 import i18n from "../i18n/config";
+import { useIndependentHTTP } from "./rpcTransport";
 
 /**
  * RPC2 客户端类
@@ -386,6 +387,9 @@ export class RPC2Client {
     params?: TParams,
     options: RPC2CallOptions = {}
   ): Promise<TResult> {
+    if (useIndependentHTTP(method)) {
+      return this.callViaHTTP(method, params, method.startsWith("admin:") ? {timeout: 12000, ...options} : options);
+    }
     // 如果启用了自动连接，且当前未连接，尝试建立连接（不阻塞使用 HTTP 回退）
     if (this.options.autoConnect &&
         this.connectionState === RPC2ConnectionState.DISCONNECTED) {

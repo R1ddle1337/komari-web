@@ -66,7 +66,7 @@ const NotificationSettings = () => {
   }, [call, loading, settings.notification_method, t]);
 
   React.useEffect(() => {
-    if (!currentChannel || currentChannel === "none") {
+    if (!currentChannel || currentChannel === "none" || !channels.some(channel => channel.id === currentChannel)) {
       setConfiguration(undefined);
       setValues({});
       return;
@@ -86,7 +86,7 @@ const NotificationSettings = () => {
         setValues({});
       })
       .finally(() => setChannelLoading(false));
-  }, [call, currentChannel]);
+  }, [call, currentChannel, channels]);
 
   const channelOptions = useMemo(() => {
     const registered = [
