@@ -34,6 +34,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: timeout 60s npm run test:owned
+      - run: timeout 60s npm run test:onboarding
       - run: npm run build
       - name: Package theme built from this source
         run: |

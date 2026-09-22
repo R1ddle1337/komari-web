@@ -1,7 +1,10 @@
 # 自管 Komari 前端
 
-此仓库基于 `komari-monitor/komari-web` 的最新稳定版 `1.5.0-fix1`，原始提交为
-`3324844cfa347f18c83435f1ccf5634df7e5b768`。保留上游功能、作者和许可信息。
+此仓库已完整合并 `komari-monitor/komari-web` 的 `radix` 开发分支，截至
+`aced74240868a1d170f83c8221d0039390c8846e`（2026-09-22 检查）。
+此前稳定版基线为 `1.5.0-fix1` 的 `3324844cfa347f18c83435f1ccf5634df7e5b768`。
+保留上游作者和许可信息，业务功能及其删除均跟随该开发分支；
+自管安装与更新来源、受控构建发布的改动继续保留。
 
 运行版本由 `R1ddle1337/komari` 主控仓库选择本仓库的完整提交 SHA，执行
 `npm ci`、`npm run build` 后嵌入主控；不能使用浮动上游前端或下载其预编译 UI。
@@ -17,7 +20,10 @@ Node.js 固定为 `22.23.2`，沿用现有 `package-lock.json`，不自动升级
 - 保留最新 UI 的指定版本与 snapshot 选项；显式选择的版本仍只从自管 Agent 仓库下载。
 - Docker 使用 `ghcr.io/r1ddle1337/komari-agent:1.5.13`。
 - 主控版本提醒仅查询 `R1ddle1337/komari` 的 releases。
-- 远控、终端、文件管理、自更新和原有安装选项均保留。
+- 远控、终端、文件管理、自更新和上游现有安装选项均保留。
+
+本次包含上游的新手引导、独立登录页和可配置仪表盘；也接受上游删除的
+命令剪贴板、终端设置页和负载告警页面。终端使用上游的默认设置。
 
 GitHub 代理只在管理员显式填写时使用。无协议的代理地址默认补全 HTTPS；
 自管 Agent 安装器要求 HTTPS。代理能同时替换脚本、二进制和校验文件，
@@ -36,6 +42,7 @@ GitHub 代理只在管理员显式填写时使用。无协议的代理地址默�
 ```sh
 npm ci --no-audit --no-fund
 npm run test:owned
+npm run test:onboarding
 npm run build
 ```
 
@@ -46,3 +53,6 @@ npm run build
 
 未来升级前先审查代码，再更新此仓库和主控仓库中的固定 SHA。
 修改 Agent 首装版本时，同时确认对应自管 release、SHA256 文件和 Docker 镜像均已发布。
+
+上游此提交声明了 `test:onboarding`，但未提交所引用的测试文件；本仓库补齐
+引导状态、站内登录回跳及主题设置保留/串行写入/失败恢复测试，单次限制 60 秒。
