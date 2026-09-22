@@ -933,6 +933,7 @@
     "zip_files_only": "仅支持 .zip 文件"
   },
   "pprof": {
+    "preview_truncated": "摘要较长，已截断显示。可在下方下载完整 pprof 文件。",
     "capture_duration": "CPU 与 trace 采集时长",
     "download": "下载",
     "duration_option": "{{seconds}} 秒",

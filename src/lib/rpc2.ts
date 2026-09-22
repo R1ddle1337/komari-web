@@ -1,3 +1,4 @@
+import { requestAbort } from "./requestAbort";
 import type {
   JSONRPC2Request,
   JSONRPC2Response,
@@ -271,7 +272,7 @@ export class RPC2Client {
       id: options.notification ? undefined : this.generateRequestId(),
     };
     const requestAbort = this.createRequestAbort(
-      options.timeout || this.options.requestTimeout,
+      options.timeout || this.options.requestTimeout, options.signal,
     );
 
     try {
@@ -356,27 +357,8 @@ export class RPC2Client {
   /**
    * AbortSignal.timeout() is unavailable in older browsers and WebViews.
    */
-  private createRequestAbort(timeout: number): {
-    signal: AbortSignal;
-    clear: () => void;
-  } {
-    const timeoutSignal = AbortSignal as typeof AbortSignal & {
-      timeout?: (milliseconds: number) => AbortSignal;
-    };
-
-    if (typeof timeoutSignal.timeout === "function") {
-      return {
-        signal: timeoutSignal.timeout(timeout),
-        clear: () => undefined,
-      };
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    return {
-      signal: controller.signal,
-      clear: () => clearTimeout(timeoutId),
-    };
+  private createRequestAbort(timeout: number, parent?: AbortSignal) {
+    return requestAbort(timeout, parent);
   }
 
   /**
@@ -387,7 +369,7 @@ export class RPC2Client {
     params?: TParams,
     options: RPC2CallOptions = {}
   ): Promise<TResult> {
-    if (useIndependentHTTP(method)) {
+    if (options.signal || useIndependentHTTP(method)) {
       return this.callViaHTTP(method, params, method.startsWith("admin:") ? {timeout: 12000, ...options} : options);
     }
     // 如果启用了自动连接，且当前未连接，尝试建立连接（不阻塞使用 HTTP 回退）

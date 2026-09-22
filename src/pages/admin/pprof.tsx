@@ -58,10 +58,8 @@ const pprofSummaryResponseSchema = z.object({
 
 type PprofProfile = z.infer<typeof pprofProfileSchema>;
 type PprofSummary = z.infer<typeof pprofSummarySchema>;
-type PprofPreview = {
-  profile: PprofProfile;
-  text: string;
-};
+type ProfileText = { text: string; truncated: boolean };
+type PprofPreview = ProfileText & { profile: PprofProfile };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -188,13 +186,13 @@ export default function PprofPage() {
   const [activeAction, setActiveAction] = React.useState<string | null>(null);
   const [actionError, setActionError] = React.useState<string | null>(null);
   const [preview, setPreview] = React.useState<PprofPreview | null>(null);
-  const [heapPreview, setHeapPreview] = React.useState<string | null>(null);
+  const [heapPreview, setHeapPreview] = React.useState<ProfileText | null>(null);
   const [heapPreviewLoading, setHeapPreviewLoading] = React.useState(false);
   const [heapPreviewError, setHeapPreviewError] = React.useState<string | null>(null);
   const heapPreviewRequestRef = React.useRef(0);
 
   const readProfilePreview = React.useCallback(
-    async (profile: PprofProfile): Promise<string> => {
+    async (profile: PprofProfile): Promise<ProfileText> => {
       if (!profile.preview) {
         throw new Error(t("pprof.preview_unavailable"));
       }
@@ -207,7 +205,7 @@ export default function PprofPage() {
       if (!response.ok) {
         throw new Error(await responseError(response, t("pprof.request_failed")));
       }
-      return response.text();
+      return { text: await response.text(), truncated: response.headers.get("X-Pprof-Preview-Truncated") === "true" };
     },
     [t],
   );
@@ -317,14 +315,14 @@ export default function PprofPage() {
   const previewProfile = async (profile: PprofProfile) => {
     if (profile.name === "heap" && heapPreview !== null) {
       setActionError(null);
-      setPreview({ profile, text: heapPreview });
+      setPreview({ profile, ...heapPreview });
       return;
     }
 
     setActiveAction(`${profile.name}:preview`);
     setActionError(null);
     try {
-      setPreview({ profile, text: await readProfilePreview(profile) });
+      setPreview({ profile, ...await readProfilePreview(profile) });
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -419,9 +417,12 @@ export default function PprofPage() {
               {t("pprof.loading")}
             </Text>
           ) : heapPreview !== null ? (
-            <pre className="max-h-[32vh] w-full overflow-auto rounded-md border border-[var(--gray-a5)] p-3 text-xs">
-              {heapPreview}
-            </pre>
+            <div className="w-full">
+              {heapPreview.truncated ? <Text as="p" size="2" color="gray" className="py-2">{t("pprof.preview_truncated")}</Text> : null}
+              <pre className="max-h-[32vh] w-full overflow-auto rounded-md border border-[var(--gray-a5)] p-3 text-xs">
+                {heapPreview.text}
+              </pre>
+            </div>
           ) : (
             <Text
               size="2"
@@ -496,6 +497,7 @@ export default function PprofPage() {
           <Dialog.Description size="2">
             {t("pprof.preview_description")}
           </Dialog.Description>
+          {preview?.truncated ? <Text as="p" size="2" color="gray" className="pt-2">{t("pprof.preview_truncated")}</Text> : null}
           <pre className="mt-3 max-h-[65vh] overflow-auto rounded-md border border-[var(--gray-a5)] p-3 text-xs">
             {preview?.text}
           </pre>

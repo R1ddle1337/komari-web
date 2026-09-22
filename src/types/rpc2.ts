@@ -125,6 +125,8 @@ export interface RPC2ConnectionOptions {
  * RPC 调用选项
  */
 export interface RPC2CallOptions {
+  /** Cancel the request when its owning view is disposed. */
+  signal?: AbortSignal;
   /** 请求超时时间（毫秒） */
   timeout?: number;
   /** 是否为通知请求（不期望响应） */

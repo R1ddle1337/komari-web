@@ -15,10 +15,10 @@ Node.js 固定为 `22.23.2`，沿用现有 `package-lock.json`，不自动升级
 所有节点安装入口（普通节点、自动发现、旧节点表格）统一使用
 `src/utils/ownedSources.ts`：
 
-- 安装脚本来自 `R1ddle1337/komari-agent` 的 `1.5.13` tag。
-- 默认初次安装传入 `--install-version 1.5.13`，Agent 仍可从其自管仓库自动更新。
+- 安装脚本来自 `R1ddle1337/komari-agent` 的 `1.5.15` tag。
+- 默认初次安装传入 `--install-version 1.5.15`，Agent 仍可从其自管仓库自动更新。
 - 保留最新 UI 的指定版本与 snapshot 选项；显式选择的版本仍只从自管 Agent 仓库下载。
-- Docker 使用 `ghcr.io/r1ddle1337/komari-agent:1.5.13`。
+- Docker 使用 `ghcr.io/r1ddle1337/komari-agent:1.5.15`。
 - 主控版本提醒仅查询 `R1ddle1337/komari` 的 releases。
 - 远控、终端、文件管理、自更新和上游现有安装选项均保留。
 

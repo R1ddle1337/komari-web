@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Button,
@@ -410,6 +410,8 @@ const DashboardContent = () => {
   const { nodeList, isLoading, error, refresh } = useNodeList();
   const { call } = useRPC2Call();
 
+  const refreshController = useRef<AbortController | null>(null);
+
   const [latest, setLatest] = useState<Record<string, any> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dbInfo, setDbInfo] = useState<{
@@ -488,7 +490,7 @@ const DashboardContent = () => {
     }
   }, [call]);
 
-  const fetchMetrics = useCallback(async () => {
+  const fetchMetrics = useCallback(async (signal: AbortSignal) => {
     const now = new Date();
     const start = new Date(now.getTime() - 24 * 3600 * 1000);
     try {
@@ -514,62 +516,68 @@ const DashboardContent = () => {
           "memory.used": "avg",
         },
         fill_empty: true,
-      });
-      setMetricsRes(res ?? null);
+      }, { signal });
+      if (!signal.aborted) setMetricsRes(res ?? null);
     } catch (e) {
-      console.error("Failed to fetch dashboard metrics:", e);
+      if (!signal.aborted) console.error("Failed to fetch dashboard metrics:", e);
     }
   }, [call]);
 
-  const fetchDbSize = useCallback(async () => {
+  const fetchDbSize = useCallback(async (signal: AbortSignal) => {
     try {
-      const res = await fetch("/api/admin/database/size");
+      const res = await fetch("/api/admin/database/size", { signal });
       const data = await res.json();
+      if (signal.aborted) return;
       const payload = data?.data;
       setDbInfo({
         main: payload?.main?.size ?? null,
         monitoring: payload?.monitoring?.size ?? null,
       });
     } catch (e) {
-      console.error("Failed to fetch database size:", e);
+      if (!signal.aborted) console.error("Failed to fetch database size:", e);
     }
   }, []);
 
-  const fetchPingStats = useCallback(async () => {
+  const fetchPingStats = useCallback(async (signal: AbortSignal) => {
     try {
       const [statsRes, tasksRes] = await Promise.all([
         call<unknown, PingMetricStatsResponse>("public:getPingMetricStats", {
           hours: 24,
-        }),
-        call<unknown, PublicPingTask[]>("public:getPublicPingTasks").catch(
+        }, { signal }),
+        call<unknown, PublicPingTask[]>("public:getPublicPingTasks", undefined, { signal }).catch(
           () => [],
         ),
       ]);
+      if (signal.aborted) return;
       setPingStats(Array.isArray(statsRes?.stats) ? statsRes.stats : []);
       setPingTasks(Array.isArray(tasksRes) ? tasksRes : []);
     } catch (e) {
-      console.error("Failed to fetch ping stats:", e);
+      if (!signal.aborted) console.error("Failed to fetch ping stats:", e);
     }
   }, [call]);
 
   const fetchAll = useCallback(async () => {
+    refreshController.current?.abort();
+    const controller = new AbortController();
+    refreshController.current = controller;
     setRefreshing(true);
     miniChartCache.clear();
     try {
       await Promise.allSettled([
         refresh(),
         fetchLatest(),
-        fetchMetrics(),
-        fetchDbSize(),
-        fetchPingStats(),
+        fetchMetrics(controller.signal),
+        fetchDbSize(controller.signal),
+        fetchPingStats(controller.signal),
       ]);
     } finally {
-      setRefreshing(false);
+      if (!controller.signal.aborted) setRefreshing(false);
     }
   }, [refresh, fetchLatest, fetchMetrics, fetchDbSize, fetchPingStats]);
 
   useEffect(() => {
     void fetchAll();
+    return () => refreshController.current?.abort();
   }, [fetchAll]);
 
   // 由一次 queryMetrics 响应派生各指标卡数据；nodeList 就绪后

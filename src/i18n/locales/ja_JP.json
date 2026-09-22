@@ -933,6 +933,7 @@
     "zip_files_only": ".zip ファイルのみ対応しています"
   },
   "pprof": {
+    "preview_truncated": "プレビューは省略されています。完全なプロファイルは下の pprof ファイルをダウンロードしてください。",
     "capture_duration": "CPU とトレースの取得時間",
     "download": "ダウンロード",
     "duration_option": "{{seconds}} 秒",

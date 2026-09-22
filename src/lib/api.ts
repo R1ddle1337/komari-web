@@ -1,5 +1,6 @@
 import React from "react";
 import { toast } from "sonner";
+import { singleFlight } from "./singleFlight";
 import { fetchJSON } from "./fetchJSON";
 
 /**
@@ -77,7 +78,11 @@ function waitForMigrationGuide(guidePath: string) {
  * Fetch settings from the API
  * @returns Promise containing the settings data
  */
-export async function getSettings(): Promise<SettingsResponse> {
+const settingsRead = singleFlight(fetchSettings);
+
+export const getSettings = settingsRead.read;
+
+async function fetchSettings(): Promise<SettingsResponse> {
   try {
     const data = await fetchJSON<{data: unknown}>("/api/admin/settings/");
     const settingsPayload = data["data"];
@@ -136,6 +141,7 @@ export async function updateSettings(
     throw new Error(message);
   }
 
+  settingsRead.invalidate();
   let responseData: unknown;
   try {
     responseData = await response.json();

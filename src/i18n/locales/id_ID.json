@@ -933,6 +933,7 @@
     "zip_files_only": "Hanya file .zip yang didukung"
   },
   "pprof": {
+    "preview_truncated": "Pratinjau dipotong. Unduh berkas pprof di bawah untuk profil lengkap.",
     "capture_duration": "Durasi pengambilan CPU dan trace",
     "download": "Unduh",
     "duration_option": "{{seconds}} dtk",

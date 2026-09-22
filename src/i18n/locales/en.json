@@ -903,6 +903,7 @@
     "zip_files_only": "Only .zip files are supported"
   },
   "pprof": {
+    "preview_truncated": "The preview is truncated. Download the pprof file below for the complete profile.",
     "capture_duration": "CPU and trace capture duration",
     "download": "Download",
     "duration_option": "{{seconds}} s",
