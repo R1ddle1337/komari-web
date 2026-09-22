@@ -9,6 +9,7 @@ import { SegmentedControl } from "@radix-ui/themes";
 import { Apache2_LICENSE, MIT_LICENSE } from "@/utils/field";
 import { getEula } from "@/utils/eula";
 import { SettingCardCollapse } from "@/components/admin/SettingCard";
+import { OWNED_SERVER_README_URL, OWNED_SERVER_README_PAGE } from "@/utils/ownedSources";
 
 export default function AboutPage() {
   const [markdown, setMarkdown] = useState("");
@@ -16,7 +17,7 @@ export default function AboutPage() {
   const [view, setView] = useState("open_source");
   useEffect(() => {
     fetch(
-      "https://raw.githubusercontent.com/komari-monitor/komari/refs/heads/main/README.md"
+      OWNED_SERVER_README_URL
     )
       .then((res) => res.text())
       .then(setMarkdown);
@@ -192,7 +193,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 <a
-                  href="https://github.com/komari-monitor/komari/blob/main/README.md"
+                  href={OWNED_SERVER_README_PAGE}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-row gap-2 text-sm items-center"

@@ -1,43 +1,87 @@
-name: Build and Release Assets
+name: Build Owned Frontend
 
 on:
-  release:
-    types: [created] # 仅在创建新的 Release 时触发
+  push:
+    branches: [owned]
+  pull_request:
+    branches: [owned]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a new theme release from the current owned commit
+        type: boolean
+        default: false
+      version:
+        description: New semantic version; required only when publishing
+        type: string
+        default: ""
+
+permissions:
+  contents: read
 
 jobs:
-  build_and_upload: # 合并了构建和上传的作业
-    runs-on: ubuntu-latest
-    permissions: # 需要权限来写入 Release 附件
-      contents: write # 或者 specific permissions like `release: write` if more granular control is needed. For `actions/upload-release-asset` this is often sufficient.
-
+  build:
+    if: github.repository == 'R1ddle1337/komari-web'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-        
-      - name: Archive build artifacts
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.23.2
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: timeout 60s npm run test:owned
+      - run: npm run build
+      - name: Package theme built from this source
         run: |
-          cd dist
-          zip -r ../dist-release.zip .
-          cd ..
-        # 将 dist 文件夹压缩为 dist-release.zip
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          set -euo pipefail
+          mkdir -p theme-package
+          cp -r dist theme-package/dist
+          cp komari-theme.json theme-package/
+          for preview in preview.png perview.png; do
+            if [ -f "$preview" ]; then cp "$preview" theme-package/; fi
+          done
+          (cd theme-package && zip -qr ../komari-theme.zip .)
+          sha256sum komari-theme.zip > komari-theme.zip.sha256
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          upload_url: ${{ github.event.release.upload_url }} # 获取上传到 Release 的 URL
-          asset_path: ./dist-release.zip # 要上传的文件的路径
-          asset_name: dist-release.zip # 在 Release 中显示的文件名
-          asset_content_type: application/zip # 文件类型
+          name: owned-frontend
+          path: |
+            komari-theme.zip
+            komari-theme.zip.sha256
+
+  publish:
+    if: github.repository == 'R1ddle1337/komari-web' && github.ref == 'refs/heads/owned' && github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: owned-frontend
+      - name: Publish only a new owned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          current_owned="$(gh api repos/R1ddle1337/komari-web/git/ref/heads/owned --jq .object.sha)"
+          test "$current_owned" = "$GITHUB_SHA"
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "The release already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION" >/dev/null 2>&1; then
+            echo "The tag already exists; choose a new owned version." >&2
+            exit 1
+          fi
+          sha256sum --strict --check komari-theme.zip.sha256
+          gh release create "$VERSION" komari-theme.zip komari-theme.zip.sha256 \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$VERSION" --notes "Owned frontend built from commit $GITHUB_SHA."

@@ -6,7 +6,7 @@ import { Terminal, Trash2, Copy, Download, DollarSign } from "lucide-react";
 import { t } from "i18next";
 import type { Row } from "@tanstack/react-table";
 import { EditDialog } from "./NodeEditDialog";
-import { quotePowerShellArg, quoteShellArgs } from "@/utils/shellQuote";
+import { buildAgentInstallCommand, normalizeGitHubProxy } from "@/utils/ownedSources";
 import {
   Button,
   Checkbox,
@@ -66,9 +66,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
     }
     const ghproxy = installOptions.ghproxy.trim();
     if (ghproxy) {
-      const finalGhproxy = ghproxy.startsWith("http")
-        ? ghproxy
-        : `http://${ghproxy}`;
+      const finalGhproxy = normalizeGitHubProxy(ghproxy);
       args.push(`--install-ghproxy`);
       args.push(finalGhproxy);
     }
@@ -83,31 +81,7 @@ export function ActionsCell({ row }: { row: Row<z.infer<typeof schema>> }) {
       args.push(serviceName);
     }
 
-    let finalCommand = "";
-    switch (selectedPlatform) {
-      case "linux":
-        finalCommand =
-          `wget -qO- https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh | sudo bash -s -- ` +
-          quoteShellArgs(args);
-        break;
-      case "windows":
-        finalCommand =
-          `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ` +
-          `"iwr 'https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.ps1'` +
-          ` -UseBasicParsing -OutFile 'install.ps1'; &` +
-          ` '.\\install.ps1'`;
-        args.forEach((arg) => {
-          finalCommand += ` ${quotePowerShellArg(arg)}`;
-        });
-        finalCommand += `"`;
-        break;
-      case "macos":
-        finalCommand =
-          `zsh <(curl -sL https://raw.githubusercontent.com/komari-monitor/komari-agent/refs/heads/main/install.sh) ` +
-          quoteShellArgs(args);
-        break;
-    }
-    return finalCommand;
+    return buildAgentInstallCommand(selectedPlatform, args);
   };
 
   const copyToClipboard = async (text: string) => {

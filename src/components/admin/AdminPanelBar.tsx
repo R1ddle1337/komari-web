@@ -29,6 +29,7 @@ import Tips from "../ui/tips";
 import { CircleFadingArrowUp } from "lucide-react";
 import { useRPC2Call } from "@/contexts/RPC2Context";
 import { resolveI18nText } from "@/utils/i18nText";
+import { OWNED_SERVER_RELEASES_URL } from "@/utils/ownedSources";
 import type { PluginInfo } from "@/types/plugin";
 import {
   getThemeConfigurationType,
@@ -260,7 +261,7 @@ const AdminPanelBar = ({ content }: AdminPanelBarProps) => {
     async function loadReleases() {
       try {
         const resp = await fetch(
-          "https://api.github.com/repos/komari-monitor/komari/releases?per_page=100",
+          OWNED_SERVER_RELEASES_URL,
           {
             headers: {
               Accept: "application/vnd.github+json",
