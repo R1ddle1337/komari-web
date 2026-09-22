@@ -55,6 +55,13 @@ export default defineConfig(({ mode }) => {
   const base: string = process.env.VITE_BASE_URL ? process.env.VITE_BASE_URL : '/';
   const baseConfig: UserConfig = {
     base: base,
+    experimental: {
+      renderBuiltUrl(filename, { type }) {
+        // The default frontend's entry, CSS and lazy preload URLs must share
+        // one namespace, even while a custom theme owns /assets/.
+        if (type === "asset") return `/themes/default/dist/${filename}`;
+      },
+    },
     plugins: [
       localKomariThemePlugin(),
       react(),
