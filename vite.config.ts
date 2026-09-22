@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -80,6 +81,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       __BUILD_TIME__: JSON.stringify(buildTime),
+      __FRONTEND_REVISION__: JSON.stringify(execFileSync("git", ["rev-parse", "--short=12", "HEAD"], { encoding: "utf8" }).trim()),
     },
       resolve: {
         alias: [

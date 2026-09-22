@@ -11,6 +11,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { SettingCard, SettingCardLabel } from "@/components/admin/SettingCard";
+import { useRPC2 } from "@/contexts/RPC2Context";
+import { fetchJSON } from "@/lib/fetchJSON";
+import { requestAbort } from "@/lib/requestAbort";
 import { formatBytes } from "@/utils/unitHelper";
 
 const pprofProfileNameSchema = z.enum([
@@ -35,6 +38,7 @@ const pprofProfileSchema = z.object({
   preview: pprofEndpointSchema.optional(),
 });
 const pprofSummarySchema = z.object({
+  build: z.object({ version: z.string(), revision: z.string(), go_version: z.string(), uptime_seconds: z.number().nonnegative() }).optional(),
   profiles: z.array(pprofProfileSchema),
   runtime: z.object({
     goroutines: z.number().int().nonnegative(),
@@ -179,6 +183,9 @@ function ProfileRow({
 
 export default function PprofPage() {
   const { t } = useTranslation();
+  const { connectionState } = useRPC2();
+  const [summaryLatency, setSummaryLatency] = React.useState<number | null>(null);
+  const [refreshedAt, setRefreshedAt] = React.useState<Date | null>(null);
   const [summary, setSummary] = React.useState<PprofSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = React.useState(true);
   const [summaryError, setSummaryError] = React.useState<string | null>(null);
@@ -197,15 +204,14 @@ export default function PprofPage() {
         throw new Error(t("pprof.preview_unavailable"));
       }
 
-      const response = await fetch(profile.preview, {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { Accept: "text/plain" },
-      });
-      if (!response.ok) {
-        throw new Error(await responseError(response, t("pprof.request_failed")));
-      }
-      return { text: await response.text(), truncated: response.headers.get("X-Pprof-Preview-Truncated") === "true" };
+      const request = requestAbort(12000);
+      try {
+        const response = await fetch(profile.preview, {
+          cache: "no-store", credentials: "same-origin", headers: { Accept: "text/plain" }, signal: request.signal,
+        });
+        if (!response.ok) throw new Error(await responseError(response, t("pprof.request_failed")));
+        return { text: await response.text(), truncated: response.headers.get("X-Pprof-Preview-Truncated") === "true" };
+      } finally { request.clear(); }
     },
     [t],
   );
@@ -249,19 +255,15 @@ export default function PprofPage() {
     setHeapPreviewError(null);
     setHeapPreviewLoading(false);
     try {
-      const response = await fetch("/api/admin/pprof/summary", {
-        cache: "no-store",
-        credentials: "same-origin",
-      });
-      if (!response.ok) {
-        throw new Error(await responseError(response, t("pprof.summary_load_failed")));
-      }
-
-      const parsed = pprofSummaryResponseSchema.safeParse(await response.json());
+      const began = performance.now();
+      const payload = await fetchJSON<unknown>("/api/admin/pprof/summary");
+      const parsed = pprofSummaryResponseSchema.safeParse(payload);
       if (!parsed.success) {
         throw new Error(t("pprof.invalid_summary"));
       }
 
+      setSummaryLatency(Math.round(performance.now() - began));
+      setRefreshedAt(new Date());
       setSummary(parsed.data.data);
       void loadHeapPreview(
         parsed.data.data.profiles.find((profile) => profile.name === "heap"),
@@ -404,6 +406,17 @@ export default function PprofPage() {
             {summaryLoading ? t("loading") : t("pprof.summary_unavailable")}
           </Text>
         )}
+      </SettingCard>
+
+      <SettingCard title={t("pprof.diagnostics_title")} description={t("pprof.diagnostics_description")}>
+        <div className="grid w-full grid-cols-1 gap-x-6 sm:grid-cols-2 lg:grid-cols-3">
+          <OverviewMetric label={t("pprof.server_version")} value={summary?.build?.version ?? "—"} />
+          <OverviewMetric label={t("pprof.frontend_revision")} value={__FRONTEND_REVISION__} />
+          <OverviewMetric label={t("pprof.go_version")} value={summary?.build?.go_version ?? "—"} />
+          <OverviewMetric label={t("pprof.overview_latency")} value={summaryLatency === null ? "—" : `${summaryLatency} ms`} />
+          <OverviewMetric label={t("pprof.live_connection")} value={connectionState === "connected" ? t("pprof.websocket_connected") : t("pprof.http_fallback")} />
+          <OverviewMetric label={t("pprof.last_refresh")} value={refreshedAt?.toLocaleTimeString() ?? "—"} />
+        </div>
       </SettingCard>
 
       {summary ? (

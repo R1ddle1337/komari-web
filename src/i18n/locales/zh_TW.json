@@ -908,6 +908,17 @@
     "zip_files_only": "僅支援 .zip 檔案"
   },
   "pprof": {
+    "diagnostics_title": "連線與版本診斷",
+    "diagnostics_description": "排查頁面緩慢時，核對實際部署版本、請求耗時和資料更新時間。",
+    "server_version": "主控版本",
+    "frontend_revision": "前端版本識別",
+    "go_version": "Go 執行環境",
+    "overview_latency": "概覽請求耗時",
+    "live_connection": "即時連線",
+    "websocket_connected": "WebSocket 已連線",
+    "http_fallback": "可使用 HTTP 備援",
+    "last_refresh": "最近更新",
+
     "preview_truncated": "摘要較長，已截斷顯示。可在下方下載完整 pprof 檔案。",
     "capture_duration": "CPU 與 trace 擷取時長",
     "download": "下載",
@@ -1341,6 +1352,8 @@
       "provider_fields": "傳送設定",
       "provider_fields_description": "詳細設定您選擇的資訊傳送渠道",
       "provider_settings_fetch_failed": "載入通知設定失敗",
+      "plugin_required_help": "請先安裝並啟用對應的通知提供者外掛，再重新整理此頁。",
+      "manage_plugins": "管理外掛",
       "channel_unavailable": "目前通知渠道未註冊。",
       "unavailable": "不可用",
       "telegram": {

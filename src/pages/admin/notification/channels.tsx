@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React, { useMemo } from "react";
 import { Text } from "@radix-ui/themes";
 import { useTranslation } from "react-i18next";
@@ -197,7 +198,8 @@ const NotificationSettings = () => {
           {t(
             "settings.notification.channel_unavailable",
             "This notification channel is not currently registered.",
-          )}
+          )} {t("settings.notification.plugin_required_help")}
+          <Link to="/admin/plugins" className="ml-2 underline">{t("settings.notification.manage_plugins")}</Link>
         </Text>
       ) : null}
       {currentRegistered && items.length > 0 ? (

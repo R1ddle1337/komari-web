@@ -2,7 +2,7 @@ import { quotePowerShellArg, quoteShellArg, quoteShellArgs } from "./shellQuote.
 
 export const OWNED_SERVER_REPOSITORY = "R1ddle1337/komari";
 export const OWNED_AGENT_REPOSITORY = "R1ddle1337/komari-agent";
-export const OWNED_AGENT_VERSION = "1.5.15";
+export const OWNED_AGENT_VERSION = "1.5.16";
 export const OWNED_SERVER_RELEASES_URL =
   `https://api.github.com/repos/${OWNED_SERVER_REPOSITORY}/releases?per_page=100`;
 export const OWNED_SERVER_README_URL =

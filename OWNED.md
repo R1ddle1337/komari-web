@@ -15,10 +15,10 @@ Node.js 固定为 `22.23.2`，沿用现有 `package-lock.json`，不自动升级
 所有节点安装入口（普通节点、自动发现、旧节点表格）统一使用
 `src/utils/ownedSources.ts`：
 
-- 安装脚本来自 `R1ddle1337/komari-agent` 的 `1.5.15` tag。
-- 默认初次安装传入 `--install-version 1.5.15`，Agent 仍可从其自管仓库自动更新。
+- 安装脚本来自 `R1ddle1337/komari-agent` 的 `1.5.16` tag。
+- 默认初次安装传入 `--install-version 1.5.16`，Agent 仍可从其自管仓库自动更新。
 - 保留最新 UI 的指定版本与 snapshot 选项；显式选择的版本仍只从自管 Agent 仓库下载。
-- Docker 使用 `ghcr.io/r1ddle1337/komari-agent:1.5.15`。
+- Docker 使用 `ghcr.io/r1ddle1337/komari-agent:1.5.16`。
 - 主控版本提醒仅查询 `R1ddle1337/komari` 的 releases。
 - 远控、终端、文件管理、自更新和上游现有安装选项均保留。
 
@@ -56,3 +56,9 @@ npm run build
 
 上游此提交声明了 `test:onboarding`，但未提交所引用的测试文件；本仓库补齐
 引导状态、站内登录回跳及主题设置保留/串行写入/失败恢复测试，单次限制 60 秒。
+
+## 深度优化（主控 1.5.7 配套）
+
+设置卡片按字段保存，避免旧快照覆盖其他修改。节点列表同时刷新合并，并取消卸载后的请求；Ping 任务列表保留正确的加载与失败状态。
+诊断页增加主控/前端版本、Go 运行时、概览请求耗时和刷新时间，摘要读取有超时边界。未注册通知渠道提供插件配置入口，不自动启用通知。
+前端依赖按已确认告警更新，DOMPurify 固定安全补丁，npm audit（含开发依赖）为 0；保留 Monaco 与路由现有功能。

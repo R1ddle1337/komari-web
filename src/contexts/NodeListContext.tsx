@@ -59,7 +59,7 @@ interface NodeListContextType {
   nodeList: NodeBasicInfo[] | null;
   isLoading: boolean;
   error: string | null;
-  refresh: () => void;
+  refresh: () => Promise<void>;
 }
 
 const NODE_LIST_CONTEXT_KEY = "__komariNodeListContext" as const;
@@ -87,23 +87,30 @@ export const NodeListProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = React.useState<string | null>(null);
   const { call } = useRPC2Call();
   const refreshSeqRef = React.useRef(0);
+  const pendingRef = React.useRef<Promise<void> | null>(null);
+  const controllerRef = React.useRef<AbortController | null>(null);
   const mountedRef = React.useRef(true);
 
   React.useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      controllerRef.current?.abort();
+      pendingRef.current = null;
     };
   }, []);
 
   const refresh = React.useCallback(() => {
+    if (pendingRef.current) return pendingRef.current;
+    const controller = new AbortController();
+    controllerRef.current = controller;
     const refreshSeq = ++refreshSeqRef.current;
     // setIsLoading(true);
     setError(null);
     // 通过 RPC2 获取节点基本信息
-    call<{ uuid?: string }, Record<string, any>>("common:getNodes")
+    const request = call<{ uuid?: string }, Record<string, any>>("common:getNodes", undefined, { signal: controller.signal })
       .then((result) => {
-        if (!mountedRef.current || refreshSeq !== refreshSeqRef.current) return;
+        if (!mountedRef.current || controller.signal.aborted || refreshSeq !== refreshSeqRef.current) return;
         if (!result || typeof result !== "object") {
           setNodeList([]);
           return;
@@ -158,14 +165,16 @@ export const NodeListProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       })
       .catch((err: any) => {
-        if (!mountedRef.current || refreshSeq !== refreshSeqRef.current) return;
+        if (!mountedRef.current || controller.signal.aborted || refreshSeq !== refreshSeqRef.current) return;
         setError(err?.message || "An error occurred while fetching data");
-        setNodeList([]);
       })
       .finally(() => {
-        if (!mountedRef.current || refreshSeq !== refreshSeqRef.current) return;
+        if (pendingRef.current === request) pendingRef.current = null;
+        if (!mountedRef.current || controller.signal.aborted || refreshSeq !== refreshSeqRef.current) return;
         setIsLoading(false);
       });
+    pendingRef.current = request;
+    return request;
   }, [call]);
 
   React.useEffect(() => {

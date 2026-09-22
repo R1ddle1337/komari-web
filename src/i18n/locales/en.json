@@ -903,6 +903,17 @@
     "zip_files_only": "Only .zip files are supported"
   },
   "pprof": {
+    "diagnostics_title": "Connection and build diagnostics",
+    "diagnostics_description": "Check the deployed build and request latency when investigating slow pages.",
+    "server_version": "Server version",
+    "frontend_revision": "Frontend revision",
+    "go_version": "Go runtime",
+    "overview_latency": "Overview request time",
+    "live_connection": "Live connection",
+    "websocket_connected": "WebSocket connected",
+    "http_fallback": "HTTP fallback available",
+    "last_refresh": "Last refreshed",
+
     "preview_truncated": "The preview is truncated. Download the pprof file below for the complete profile.",
     "capture_duration": "CPU and trace capture duration",
     "download": "Download",
@@ -1336,6 +1347,8 @@
       "provider_fields": "Send Settings",
       "provider_fields_description": "Detailed settings for the information sending channel you choose",
       "provider_settings_fetch_failed": "Failed to load notification settings",
+      "plugin_required_help": "Install and enable the corresponding provider plugin, then reload this page.",
+      "manage_plugins": "Manage plugins",
       "channel_unavailable": "This notification channel is not currently registered.",
       "unavailable": "Unavailable",
       "telegram": {

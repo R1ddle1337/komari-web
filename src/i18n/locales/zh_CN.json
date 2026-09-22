@@ -933,6 +933,17 @@
     "zip_files_only": "仅支持 .zip 文件"
   },
   "pprof": {
+    "diagnostics_title": "连接与版本诊断",
+    "diagnostics_description": "排查页面缓慢时，核对实际部署版本、请求耗时和数据刷新时间。",
+    "server_version": "主控版本",
+    "frontend_revision": "前端版本标识",
+    "go_version": "Go 运行时",
+    "overview_latency": "概览请求耗时",
+    "live_connection": "实时连接",
+    "websocket_connected": "WebSocket 已连接",
+    "http_fallback": "可使用 HTTP 回退",
+    "last_refresh": "最近刷新",
+
     "preview_truncated": "摘要较长，已截断显示。可在下方下载完整 pprof 文件。",
     "capture_duration": "CPU 与 trace 采集时长",
     "download": "下载",
@@ -1344,6 +1355,8 @@
     },
     "missing_required_fields": "请填写必填字段: {{fieldNames}}",
     "notification": {
+      "plugin_required_help": "请先安装并启用对应的通知提供者插件，再刷新此页。",
+      "manage_plugins": "管理插件",
       "channel_unavailable": "当前通知渠道未注册。",
       "email": {
         "host": "SMTP 服务器",
