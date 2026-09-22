@@ -19,8 +19,8 @@ const AdminLoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { account, loading, refresh } = useAccount();
-  const { publicInfo, isLoading: publicInfoLoading } = usePublicInfo();
+  const { account, loading, refresh, error: accountError } = useAccount();
+  const { publicInfo, isLoading: publicInfoLoading, error: publicError, refresh: refreshPublic } = usePublicInfo();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [twoFactor, setTwoFactor] = useState("");
@@ -88,6 +88,14 @@ const AdminLoginPage = () => {
       </div>
       <Card className="km-login-card w-full max-w-[430px]">
         <Flex direction="column" gap="4">
+          {(accountError || publicError) && (
+            <Flex direction="column" gap="2">
+              <Text color="red" role="alert">{accountError?.message || publicError}</Text>
+              <Button variant="soft" onClick={() => { void refresh(); void refreshPublic(); }}>
+                {t("common.retry", "Retry")}
+              </Button>
+            </Flex>
+          )}
           <div>
             <Heading size="6">{t("login.title")}</Heading>
             <Text as="p" size="2" color="gray" mt="1">

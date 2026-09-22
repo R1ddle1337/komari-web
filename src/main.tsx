@@ -11,7 +11,7 @@ import {
 } from "./contexts/ThemeContext";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { useSystemTheme } from "./hooks/useSystemTheme";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 // Ensure i18n is initialized before any component renders
 import "./i18n/config";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -27,6 +27,7 @@ import { Toaster } from "./components/ui/sonner";
 import { RPC2Provider } from "./contexts/RPC2Context";
 import { NodeListProvider } from "./contexts/NodeListContext";
 const App = () => {
+	const { pathname } = useLocation();
   const restrictedPath = window.location.pathname.replace(/\/$/, "");
   const isRestrictedGuideRoute = [
     "/admin/database-migration",
@@ -92,6 +93,11 @@ const App = () => {
               <Toaster />
               {routing}
             </>
+          ) : pathname === "/admin/login" ? (
+            <PublicInfoProvider>
+              <Toaster />
+              {routing}
+            </PublicInfoProvider>
           ) : (
             <RPC2Provider>
               <PublicInfoProvider>

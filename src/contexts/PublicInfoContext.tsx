@@ -1,4 +1,5 @@
 import React from "react";
+import { fetchJSON } from "@/lib/fetchJSON";
 import defaultTheme from "../../komari-theme.json";
 //import { useRPC2Call } from "./RPC2Context";
 
@@ -79,11 +80,7 @@ export const PublicInfoProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
     setIsLoading(true);
     try {
-      const response = await fetch("/api/public");
-      if (!response.ok) {
-        throw new Error("Failed to fetch public info");
-      }
-      const resp = (await response.json()) as Response;
+      const resp = await fetchJSON<Response>("/api/public");
       if (resp && resp.data) {
         setPublicInfo(withThemeDefaults(resp.data));
       } else {

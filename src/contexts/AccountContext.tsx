@@ -1,4 +1,5 @@
 import React from "react";
+import { fetchJSON } from "@/lib/fetchJSON";
 
 // 账户数据类型
 type Account = {
@@ -15,7 +16,7 @@ interface AccountContextType{
     account: Account | null;
     loading: boolean;
     error: Error | null;
-    refresh: () => void;
+    refresh: () => Promise<void>;
 }
 
 // 创建Context
@@ -32,11 +33,7 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setLoading(true);
         setError(null);
         try {
-        const response = await fetch("/api/me");
-        if (!response.ok) {
-            throw new Error("Failed to fetch account data");
-        }
-        const data: Account = await response.json();
+        const data = await fetchJSON<Account>("/api/me");
         setAccount(data);
         } catch (err) {
         setError(err as Error);

@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:owned": "node --test --test-timeout=60000 script/ownedSources.test.mjs",
     "test:onboarding": "node --test --test-timeout=60000 script/onboarding.test.mjs",
+    "test:network": "node --test --test-timeout=60000 script/fetchJSON.test.mjs",
     "preview": "vite preview",
     "i18n:sync": "node ./script/i18n-sync.mjs",
     "i18n:sync:dry": "node ./script/i18n-sync.mjs --dry-run"
