@@ -1,3 +1,4 @@
+import { decodeMetricResponse } from "./metricWire";
 import { requestAbort } from "./requestAbort";
 import type {
   JSONRPC2Request,
@@ -265,6 +266,9 @@ export class RPC2Client {
     params?: TParams,
     options: RPC2CallOptions = {}
   ): Promise<TResult> {
+    if (method === "public:queryMetrics" && params && typeof params === "object" && !Array.isArray(params)) {
+      params = { compact: true, ...params };
+    }
     const request: JSONRPC2Request<TParams> = {
       jsonrpc: "2.0",
       method,
@@ -297,7 +301,7 @@ export class RPC2Client {
         throw new Error(`RPC Error ${jsonResponse.error.code}: ${jsonResponse.error.message}`);
       }
 
-      return jsonResponse.result;
+      return method === "public:queryMetrics" ? decodeMetricResponse(jsonResponse.result) : jsonResponse.result;
     } catch (error) {
       if (error instanceof Error) {
         throw error;

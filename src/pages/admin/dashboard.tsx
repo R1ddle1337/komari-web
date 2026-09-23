@@ -56,7 +56,6 @@ import {
   metricSeriesColor,
   normalizeMetricSeriesList,
   pingMetricStatKey,
-  pingTaskId,
   pingTaskName,
 } from "@/utils/metricSeries";
 
@@ -70,26 +69,6 @@ const formatSpeed = (bytes: number): string => {
   if (i <= 1) decimals = 0;
   if (size >= 100) decimals = 0;
   return `${size.toFixed(decimals)} ${units[i]}`;
-};
-
-const weightedP95 = (
-  points: { value: number; count?: number }[],
-): number | null => {
-  const valid = points.filter(
-    (point) =>
-      Number.isFinite(point.value) &&
-      point.value >= 0 &&
-      (point.count ?? 1) > 0,
-  );
-  if (valid.length === 0) return null;
-  const total = valid.reduce((sum, point) => sum + (point.count ?? 1), 0);
-  const sorted = [...valid].sort((a, b) => a.value - b.value);
-  let cumulative = 0;
-  for (const point of sorted) {
-    cumulative += point.count ?? 1;
-    if (cumulative >= total * 0.95) return point.value;
-  }
-  return sorted[sorted.length - 1].value;
 };
 
 const weightedAverage = (
@@ -502,7 +481,6 @@ const DashboardContent = () => {
           "traffic.down",
           ...CPU_METRIC_KEYS,
           ...MEM_METRIC_KEYS,
-          PING_LATENCY_METRIC,
         ],
         start: start.toISOString(),
         end: now.toISOString(),
@@ -693,24 +671,6 @@ const DashboardContent = () => {
     },
   } satisfies ChartConfig;
 
-  const pingP95Map = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const series of metricsRes?.series ?? []) {
-      const taskId = pingTaskId(series.tags);
-      if (!taskId) continue;
-      const p95 = weightedP95(
-        (series.points ?? []).map((point) => ({
-          value: point.value ?? NaN,
-          count: point.count,
-        })),
-      );
-      if (p95 != null) {
-        map.set(pingMetricStatKey(series.entity_id, taskId), p95);
-      }
-    }
-    return map;
-  }, [metricsRes]);
-
   const pingRankItems = useMemo(() => {
     const taskMap = new Map(
       pingTasks.map((task) => [String(task.id), task]),
@@ -723,8 +683,7 @@ const DashboardContent = () => {
       );
       const nodeName =
         nodeNameMap.get(stat.entity_id) ?? stat.entity_id.slice(0, 8);
-      const p95 =
-        pingP95Map.get(pingMetricStatKey(stat.entity_id, stat.task_id)) ?? null;
+      const p95 = stat.p95 ?? null;
       return {
         key: pingMetricStatKey(stat.entity_id, stat.task_id),
         entityId: stat.entity_id,
@@ -736,7 +695,7 @@ const DashboardContent = () => {
         valid: stat.valid,
       } satisfies PingRankItem;
     });
-  }, [pingStats, pingP95Map, pingTasks, nodeNameMap, t]);
+  }, [pingStats, pingTasks, nodeNameMap, t]);
 
   // 无有效延迟样本(如 100% 丢包)的节点波动无意义，不参与稳定性排名
   const stableLatencyItems = useMemo(
