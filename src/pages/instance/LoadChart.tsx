@@ -191,7 +191,6 @@ type MetricRangeParams =
   | { start: string; end: string };
 
 const MAX_REALTIME_POINTS = 30 * 5;
-const HISTORY_MAX_POINTS = 700;
 const DASHBOARD_TEMPLATE_KEY = "chartDashboardTemplate";
 const CUSTOM_RANGE_DEFAULT_DAYS = 24;
 
@@ -1142,7 +1141,6 @@ const LoadChart = ({ data = [], onRealtimeActiveChange }: LoadChartProps) => {
         metric_keys: metricKeys,
         entity_id: uuid,
         ...metricRangeParams,
-        max_points: HISTORY_MAX_POINTS,
         aggregation,
         fill_empty: true,
       },
@@ -1182,7 +1180,6 @@ const LoadChart = ({ data = [], onRealtimeActiveChange }: LoadChartProps) => {
       {
         entity_id: uuid,
         ...metricRangeParams,
-        max_points: HISTORY_MAX_POINTS,
       },
       { timeout: 30000 },
     )

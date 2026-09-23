@@ -1,21 +1,18 @@
-/** Decode lossless metric tuples once at the transport boundary. Older servers
- * keep returning ordinary points and pass through without copying. */
+/** Decode the canonical points_v1 metric wire format at the transport boundary. */
 export function decodeMetricResponse<T>(value: T): T {
   if (!value || typeof value !== 'object')
-    return value
+    throw new Error('Invalid metric response')
   const result = value as Record<string, unknown>
   if (!Array.isArray(result.series))
-    return value
-  let changed = false
+    throw new Error('Invalid metric series')
   const series = result.series.map((item: unknown) => {
     if (!item || typeof item !== 'object')
-      return item
+      throw new Error('Invalid metric series')
     const entry = item as Record<string, unknown>
     if (entry.point_format !== 'points_v1')
-      return item
+      throw new Error('Unsupported metric point format')
     if (!Array.isArray(entry.points))
       throw new Error('Invalid compact metric points')
-    changed = true
     return {
       ...entry,
       point_format: undefined,
@@ -35,5 +32,5 @@ export function decodeMetricResponse<T>(value: T): T {
       }),
     }
   })
-  return changed ? { ...result, series } as T : value
+  return { ...result, series } as T
 }

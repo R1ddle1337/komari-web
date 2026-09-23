@@ -103,7 +103,7 @@ const MiniPingChart = ({
     );
     const statsRequest = call<unknown, PingMetricStatsResponse>(
       "public:getPingMetricStats",
-      { entity_id: uuid, hours, max_points: 240 },
+      { entity_id: uuid, hours },
       { timeout: 30000 },
     ).catch(() => null);
 

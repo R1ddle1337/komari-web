@@ -3,6 +3,5 @@
 export function useIndependentHTTP(method: string): boolean {
   return method === "public:queryMetrics" ||
     method === "public:getPingMetricStats" ||
-    method === "common:getRecords" ||
     /^admin:(get|list|query)/.test(method);
 }

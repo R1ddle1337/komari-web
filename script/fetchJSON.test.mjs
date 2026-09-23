@@ -69,7 +69,7 @@ test("account requests finish or fail even when a response body stalls", async (
   await assert.rejects(fetchJSON(`${base}/stall`, 100), /timed out/);
 });
 
-test("compact metric transport preserves samples and accepts older servers", async () => {
+test("canonical metric transport preserves samples and rejects retired formats", async () => {
   const { decodeMetricResponse } = await import("../src/lib/metricWire.ts");
   const tags = { task_id: "17" };
   const input = {series:[{metric_key:"ping.latency_ms",entity_id:"node",tags,point_format:"points_v1",points:[[1700000000123,1.2345678901234567,9],[1700000001123,null,0],[1700000002123,-1,3,{device:'GPU <0>'}]]}]};
@@ -79,7 +79,7 @@ test("compact metric transport preserves samples and accepts older servers", asy
   assert.deepEqual(result.series[0].points[2].labels,{device:'GPU <0>'});
   assert.ok(Array.isArray(input.series[0].points[0]),"decoding must not mutate the transport payload");
   const legacy={series:[{points:[{time:'2026-01-01T00:00:00Z',value:3}]}]};
-  assert.equal(decodeMetricResponse(legacy),legacy);
+  assert.throws(()=>decodeMetricResponse(legacy), /Unsupported metric point format/);
   for(const bad of [[NaN,1,1],[1700000000000,Infinity,1],[1700000000000,1,-1],[1700000000000,1]]){
     assert.throws(()=>decodeMetricResponse({series:[{point_format:'points_v1',points:[bad]}]}),/Invalid compact metric sample/);
   }
