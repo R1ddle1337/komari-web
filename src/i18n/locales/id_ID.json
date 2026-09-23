@@ -1504,6 +1504,7 @@
     "title": "Sistem"
   },
   "terminal": {
+    "server_offline": "Server ini offline atau tidak tersedia",
     "2fa_code_prompt": "Masukkan kode 2FA: ",
     "2fa_prompt": "Autentikasi dua faktor diperlukan.",
     "clients_load_failed": "Gagal memuat server",
@@ -1546,6 +1547,7 @@
       "loading_servers": "Memuat server...",
       "new_tab": "Tab Baru",
       "no_servers": "Tidak ada server tersedia",
+      "no_online_servers": "Tidak ada server online",
       "open_terminal": "Buka Terminal",
       "open_workbench": "Buka Area Kerja",
       "scroll_left": "Gulir tab ke kiri",

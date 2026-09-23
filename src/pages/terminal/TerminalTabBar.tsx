@@ -59,6 +59,7 @@ export interface TerminalTabBarProps {
   tabs: TerminalTab[];
   clients: TerminalClient[];
   clientsLoading: boolean;
+  clientsError: boolean;
   activeTabId: string | null;
   editingTabId: string | null;
   renameDraft: string;
@@ -227,6 +228,7 @@ const TerminalTabBar = ({
   tabs,
   clients,
   clientsLoading,
+  clientsError,
   activeTabId,
   editingTabId,
   renameDraft,
@@ -518,10 +520,15 @@ const TerminalTabBar = ({
                 <Server size={14} />
                 <span>{t("terminal.tabs.loading_servers", "Loading servers...")}</span>
               </DropdownMenuItem>
+            ) : clientsError ? (
+              <DropdownMenuItem disabled>
+                <Server size={14} />
+                <span>{t("terminal.clients_load_failed", "Failed to load servers")}</span>
+              </DropdownMenuItem>
             ) : clients.length === 0 ? (
               <DropdownMenuItem disabled>
                 <Server size={14} />
-                <span>{t("terminal.tabs.no_servers")}</span>
+                <span>{t("terminal.tabs.no_online_servers", "No online servers")}</span>
               </DropdownMenuItem>
             ) : (
               orderedClients.map((client, index) => {
@@ -580,10 +587,15 @@ const TerminalTabBar = ({
                 <Server size={14} />
                 <span>{t("terminal.tabs.loading_servers", "Loading servers...")}</span>
               </DropdownMenuItem>
+            ) : clientsError ? (
+              <DropdownMenuItem disabled>
+                <Server size={14} />
+                <span>{t("terminal.clients_load_failed", "Failed to load servers")}</span>
+              </DropdownMenuItem>
             ) : clients.length === 0 ? (
               <DropdownMenuItem disabled>
                 <Server size={14} />
-                <span>{t("terminal.tabs.no_servers")}</span>
+                <span>{t("terminal.tabs.no_online_servers", "No online servers")}</span>
               </DropdownMenuItem>
             ) : (
               orderedClients.map((client) => (

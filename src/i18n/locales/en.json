@@ -1487,6 +1487,7 @@
     "title": "System"
   },
   "terminal": {
+    "server_offline": "This server is offline or unavailable",
     "2fa_prompt": "Two-factor authentication required.",
     "2fa_code_prompt": "Enter 2FA code: ",
     "otp_invalid": "Invalid or expired 2FA code",
@@ -1502,6 +1503,7 @@
       "new_tab": "New tab",
       "choose_server": "Choose a server",
       "no_servers": "No servers available",
+      "no_online_servers": "No online servers",
       "empty_title": "No connected servers",
       "loading_servers": "Loading servers...",
       "empty_action": "Connect to a server",

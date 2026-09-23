@@ -1504,6 +1504,7 @@
     "title": "システム"
   },
   "terminal": {
+    "server_offline": "このノードはオフラインか利用できません",
     "2fa_code_prompt": "2FAコードを入力してください: ",
     "2fa_prompt": "二要素認証が必要です。",
     "clients_load_failed": "サーバーの読み込みに失敗しました",
@@ -1546,6 +1547,7 @@
       "loading_servers": "サーバーを読み込み中...",
       "new_tab": "新しいタブ",
       "no_servers": "利用可能なサーバーはありません",
+      "no_online_servers": "オンラインのノードがありません",
       "open_terminal": "ターミナルを開く",
       "open_workbench": "ワークベンチを開く",
       "scroll_left": "タブを左へスクロール",

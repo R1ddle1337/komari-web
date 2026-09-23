@@ -18,6 +18,8 @@ const TerminalPage = () => {
     appearance,
     clients,
     clientsLoading,
+    clientsError,
+    refreshClients,
     tabs,
     activeTabId,
     editingTabId,
@@ -84,18 +86,25 @@ const TerminalPage = () => {
             tabs={tabs}
             clients={clients}
             clientsLoading={clientsLoading}
+            clientsError={clientsError}
             activeTabId={activeTabId}
             editingTabId={editingTabId}
             renameDraft={renameDraft}
             serverMenuOpen={serverMenuOpen}
             onServerMenuOpenChange={(open) => {
               setServerMenuOpen(open);
-              if (open) setWorkbenchMenuOpen(false);
+              if (open) {
+                setWorkbenchMenuOpen(false);
+                refreshClients();
+              }
             }}
             workbenchMenuOpen={workbenchMenuOpen}
             onWorkbenchMenuOpenChange={(open) => {
               setWorkbenchMenuOpen(open);
-              if (open) setServerMenuOpen(false);
+              if (open) {
+                setServerMenuOpen(false);
+                refreshClients();
+              }
             }}
             onActivate={setActiveTabId}
             onOpenTerminalClient={openClient}

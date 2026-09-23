@@ -1492,6 +1492,7 @@
     "title": "系統"
   },
   "terminal": {
+    "server_offline": "此節點已離線或無法使用",
     "2fa_code_prompt": "請輸入 2FA 驗證碼: ",
     "2fa_prompt": "需要雙因素認證。",
     "clients_load_failed": "伺服器載入失敗",
@@ -1534,6 +1535,7 @@
       "loading_servers": "正在載入伺服器...",
       "new_tab": "新增分頁",
       "no_servers": "沒有可用的伺服器",
+      "no_online_servers": "暫無線上節點",
       "open_terminal": "開啟終端",
       "open_workbench": "開啟工作臺",
       "scroll_left": "向左捲動分頁",

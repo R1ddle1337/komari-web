@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { useOnlineTerminalClients } from "./useOnlineTerminalClients";
 import type {
   CSSProperties,
   MouseEvent as ReactMouseEvent,
@@ -45,8 +46,7 @@ const getTabShortcutIndex = (event: KeyboardEvent) => {
 
 export const useTerminalPage = () => {
   const { t } = useTranslation();
-  const [clients, setClients] = useState<TerminalClient[]>([]);
-  const [clientsLoading, setClientsLoading] = useState(true);
+  const { clients, clientsLoading, clientsError, refreshClients } = useOnlineTerminalClients();
   const [tabs, setTabs] = useState<TerminalTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
@@ -103,53 +103,20 @@ export const useTerminalPage = () => {
   );
 
   useEffect(() => {
-    let mounted = true;
-    setClientsLoading(true);
-    fetch("/api/admin/client/list")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to load clients (${response.status})`);
-        }
-        return response.json();
-      })
-      .then((data: unknown) => {
-        if (!mounted) {
-          return;
-        }
-        const list = Array.isArray(data) ? (data as TerminalClient[]) : [];
-        setClients(list);
-        setClientsLoading(false);
-        const initialUuid = initialUuidRef.current;
-        if (!initialUuid) {
-          return;
-        }
-        const client = list.find((item) => item.uuid === initialUuid);
-        if (!client) {
-          if (list.length === 0) {
-            toast.error(t("terminal.no_active_connection"));
-          }
-          return;
-        }
-        if (tabsRef.current.length === 0) {
-          const tab = createTab(client, undefined, t("terminal.server"));
-          updateTabs([tab]);
-          setActiveTabId(tab.id);
-        }
-      })
-      .catch((error) => {
-        if (mounted) {
-          console.error("Failed to load clients:", error);
-          toast.error(t("terminal.clients_load_failed", "Failed to load servers"));
-        }
-      })
-      .finally(() => {
-        if (mounted) setClientsLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [t, updateTabs]);
+    if (clientsLoading || clientsError || !initialUuidRef.current) return;
+    const initialUuid = initialUuidRef.current;
+    initialUuidRef.current = null;
+    const client = clients.find(item => item.uuid === initialUuid);
+    if (!client) {
+      toast.error(t("terminal.server_offline", "This server is offline or unavailable"));
+      return;
+    }
+    if (tabsRef.current.length === 0) {
+      const tab = createTab(client, undefined, t("terminal.server"));
+      updateTabs([tab]);
+      setActiveTabId(tab.id);
+    }
+  }, [clients, clientsLoading, clientsError, t, updateTabs]);
 
   useEffect(() => {
     let mounted = true;
@@ -349,12 +316,16 @@ export const useTerminalPage = () => {
 
   const openClient = useCallback(
     (client: TerminalClient) => {
+      if (!clients.some(item => item.uuid === client.uuid)) {
+        toast.error(t("terminal.server_offline", "This server is offline or unavailable"));
+        return;
+      }
       const tab = createTab(client, undefined, t("terminal.server"));
       updateTabs([...tabsRef.current, tab]);
       setActiveTabId(tab.id);
       setServerMenuOpen(false);
     },
-    [t, updateTabs],
+    [clients, t, updateTabs],
   );
 
   const duplicateTab = useCallback(
@@ -362,6 +333,10 @@ export const useTerminalPage = () => {
       const source = tabsRef.current.find((item) => item.id === id);
       if (!source) {
         setServerMenuOpen(true);
+        return;
+      }
+      if (!clients.some(item => item.uuid === source.uuid)) {
+        toast.error(t("terminal.server_offline", "This server is offline or unavailable"));
         return;
       }
       const duplicate: TerminalTab = {
@@ -372,7 +347,7 @@ export const useTerminalPage = () => {
       updateTabs([...tabsRef.current, duplicate]);
       setActiveTabId(duplicate.id);
     },
-    [updateTabs],
+    [clients, t, updateTabs],
   );
 
   const addTab = useCallback(() => {
@@ -799,6 +774,8 @@ export const useTerminalPage = () => {
     appearance,
     clients,
     clientsLoading,
+    clientsError,
+    refreshClients,
     tabs,
     activeTabId,
     editingTabId,
