@@ -14,7 +14,7 @@
  * stringToBytes('1tb');         // 1099511627776
  */
 export function stringToBytes(str: string): number {
-  if (typeof str !== "string" || str.length === 0) {
+  if (typeof str !== "string" || str.length === 0 || str.length > 256) {
     return 0;
   }
   // 定义单位和它们的字节倍数 (使用 1024 为基数)
@@ -46,6 +46,7 @@ export function stringToBytes(str: string): number {
 
   // 1. 预处理字符串：转小写，移除逗号和空格
   const cleanStr = str.toLowerCase().replace(/,/g, "").replace(/\s/g, "");
+  if (!cleanStr) return 0;
 
   // 2. 分离单位和数值
   // 按长度降序排序单位，以优先匹配长单位（如 'kb' 而不是 'b'）
@@ -68,23 +69,59 @@ export function stringToBytes(str: string): number {
   }
 
   try {
-    // 3. 计算数值部分
-    // 使用 Function 构造函数来安全地评估可能包含乘法或科学记数法的表达式
-    // 注意：这仍然假设输入源是可信的，因为它能执行简单的数学运算
-    const value = new Function(`return ${numericPart}`)();
-
-    if (isNaN(value)) {
-      return 0;
-    }
-
-    // 4. 乘以单位对应的倍数
-    const multiplier = units[unit];
-    return Math.round(value * multiplier);
-  } catch (error) {
-    // 如果表达式无效（例如 "abc-gb"），则捕获错误并返回 0
-    console.error(`Error parsing string "${str}":`, error);
+    // 3. 只解析有限的数字、科学记数法、括号和四则运算，不执行 JavaScript。
+    const value = parseByteExpression(numericPart);
+    const bytes = Math.round(value * units[unit]);
+    return Number.isSafeInteger(bytes) && bytes >= 0 ? bytes : 0;
+  } catch {
+    // 编辑中的不完整表达式与无效输入均沿用 0 的返回约定。
     return 0;
   }
+}
+
+function parseByteExpression(source: string): number {
+  let position = 0;
+  const fail = (): never => { throw new Error("Invalid byte expression"); };
+  const finite = (value: number) => Number.isFinite(value) ? value : fail();
+  const factor = (depth: number): number => {
+    if (depth > 32) return fail();
+    const next = source[position];
+    if (next === "+" || next === "-") {
+      position++;
+      const value = factor(depth + 1);
+      return next === "-" ? -value : value;
+    }
+    if (next === "(") {
+      position++;
+      const value = expression(depth + 1);
+      if (source[position++] !== ")") return fail();
+      return value;
+    }
+    const match = /^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/.exec(source.slice(position));
+    if (!match) return fail();
+    position += match[0].length;
+    return finite(Number(match[0]));
+  };
+  const term = (depth: number): number => {
+    let value = factor(depth);
+    while (source[position] === "*" || source[position] === "/") {
+      const operator = source[position++];
+      const right = factor(depth);
+      value = finite(operator === "*" ? value * right : value / right);
+    }
+    return value;
+  };
+  const expression = (depth: number): number => {
+    let value = term(depth);
+    while (source[position] === "+" || source[position] === "-") {
+      const operator = source[position++];
+      const right = term(depth);
+      value = finite(operator === "+" ? value + right : value - right);
+    }
+    return value;
+  };
+  const result = expression(0);
+  return position === source.length ? result : fail();
 }
 
 export function formatBytes(bytes: number): string {

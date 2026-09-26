@@ -19,6 +19,7 @@ import SelectorDialog from "@/components/SelectorDialog";
 import { useNodeList } from "@/contexts/NodeListContext";
 import { useRPC2Call } from "@/contexts/RPC2Context";
 import type { I18nText } from "@/utils/i18nText";
+import { sanitizeConfigHtml } from "@/utils/safeMarkup";
 
 export interface ConfigFormItem {
   key?: string;
@@ -340,7 +341,7 @@ const ConfigFormTabs = ({
         <Box
           key={`textbox-${index}`}
           className="km-config-textbox"
-          dangerouslySetInnerHTML={{ __html: title || "" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeConfigHtml(title || "") }}
         />
       );
     }

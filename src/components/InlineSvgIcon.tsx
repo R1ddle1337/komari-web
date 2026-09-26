@@ -1,16 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { sanitizeSvg } from "@/utils/safeMarkup";
 
 const MAX_INLINE_SVG_BYTES = 64 * 1024;
-const BLOCKED_ELEMENTS = new Set([
-  "canvas",
-  "embed",
-  "foreignobject",
-  "iframe",
-  "link",
-  "object",
-  "script",
-  "video",
-]);
 
 interface InlineSvgIconProps {
   src: string;
@@ -21,60 +12,6 @@ interface InlineSvgIconProps {
 }
 
 const isSvgUrl = (src: string) => /\.svg$/i.test(src.split(/[?#]/, 1)[0]);
-
-const hasUnsafeReference = (value: string) =>
-  /(?:javascript:|data:text\/html|url\(\s*(?!#))/i.test(value);
-
-const sanitizeSvg = (source: string): string | null => {
-  const document = new DOMParser().parseFromString(source, "image/svg+xml");
-  const root = document.documentElement;
-  if (
-    !root ||
-    root.localName?.toLowerCase() !== "svg" ||
-    document.querySelector("parsererror")
-  ) {
-    return null;
-  }
-
-  const elements = [root, ...Array.from(root.querySelectorAll("*"))];
-  for (const element of elements) {
-    const tagName = element.localName?.toLowerCase();
-    if (tagName && BLOCKED_ELEMENTS.has(tagName)) {
-      element.remove();
-      continue;
-    }
-    if (
-      tagName === "style" &&
-      hasUnsafeReference(element.textContent || "")
-    ) {
-      element.remove();
-      continue;
-    }
-
-    for (const attribute of Array.from(element.attributes)) {
-      const name = attribute.name.toLowerCase();
-      const value = attribute.value.trim();
-      if (name.startsWith("on") || name === "src") {
-        element.removeAttribute(attribute.name);
-        continue;
-      }
-      if (name === "href" || name === "xlink:href") {
-        if (!value.startsWith("#")) element.removeAttribute(attribute.name);
-        continue;
-      }
-      if (hasUnsafeReference(value)) {
-        element.removeAttribute(attribute.name);
-      }
-    }
-  }
-
-  root.setAttribute("width", "100%");
-  root.setAttribute("height", "100%");
-  root.style.display = "block";
-  root.style.width = "100%";
-  root.style.height = "100%";
-  return root.outerHTML;
-};
 
 const readResponseText = async (response: Response) => {
   const contentLength = Number(response.headers.get("content-length"));

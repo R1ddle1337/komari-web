@@ -36,6 +36,7 @@ jobs:
       - run: timeout 60s npm run test:owned
       - run: timeout 60s npm run test:onboarding
       - run: timeout 60s npm run test:network
+      - run: timeout 60s npm run test:security
       - run: npm run build
       - name: Package theme built from this source
         run: |
